@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Peran {
+  SUPER_ADMIN
+  ADMIN
+  UPLOADER
+  PENGGUNA
+  REKTOR
+  SPECIAL_GUEST
+}
+
+enum JenisAkun {
+  DOSEN
+  TENDIK
+  LAINNYA
+}
+
+enum TipeAkses {
+  PUBLIK
+  PRIVAT_DOSEN
+  PRIVAT_TENDIK
+  TOP_SECRET
+}
+
+enum StatusDokumen {
+  DRAFT
+  MENUNGGU
+  REVISI
+  TERBIT
+}
+
+enum StatusLaporan {
+  BARU
+  SEDANG_DIPERBAIKI
+  SELESAI
+  DITUTUP
+}
+
+model Pengguna {
+  id              String         @id @default(cuid())
+  username        String         @unique
+  nama            String
+  email           String         @unique
+  passwordHash    String?
+  peran           Peran
+  jenis           JenisAkun
+  aktif           Boolean        @default(true)
+  tanggalBerakhir DateTime? // wajib untuk SPECIAL_GUEST
+  dibuat          DateTime       @default(now())
+  dokumen         Dokumen[]      @relation("Uploader")
+  laporan         LaporanLink[]
+  log             LogAktivitas[]
+}
+
+model Kategori {
+  id      String     @id @default(cuid())
+  nama    String
+  indukId String?
+  induk   Kategori?  @relation("Pohon", fields: [indukId], references: [id])
+  anak    Kategori[] @relation("Pohon")
+  dokumen Dokumen[]
+}
+
+model Dokumen {
+  id             String           @id @default(cuid())
+  judul          String
+  linkDrive      String
+  deskripsi      String
+  kategoriId     String
+  kategori       Kategori         @relation(fields: [kategoriId], references: [id])
+  tahun          Int
+  berlakuSampai  Int? // tahun; null = tidak kedaluwarsa
+  kataKunci      String           @default("") // dipisah koma
+  tipeAkses      TipeAkses // nilai final dari verifikator
+  usulanAkses    TipeAkses // usulan uploader
+  status         StatusDokumen    @default(DRAFT)
+  uploaderId     String
+  uploader       Pengguna         @relation("Uploader", fields: [uploaderId], references: [id])
+  diperiksaOleh  String? // id verifikator yang sedang memeriksa
+  diperiksaSejak DateTime? // waktu mulai pemeriksaan (timeout 30 menit)
+  catatanRevisi  String?
+  dibuat         DateTime         @default(now())
+  diubah         DateTime         @updatedAt
+  diterbitkan    DateTime?
+  dikunci        Boolean          @default(false) // dikunci oleh REKTOR agar tidak bisa dilihat
+  alasanKunci    String?
+  linkBermasalah Boolean          @default(false)
+  pengingat60    Boolean          @default(false)
+  pengingat14    Boolean          @default(false)
+  akses          AksesTopSecret[]
+  laporan        LaporanLink[]
+
+  @@index([status, tipeAkses])
+  @@index([kategoriId])
+  @@index([tahun])
+}
+
+model AksesTopSecret {
+  // HANYA dibaca server. Jangan pernah dikirim ke klien.
+  dokumenId  String
+  penggunaId String
+  dokumen    Dokumen @relation(fields: [dokumenId], references: [id], onDelete: Cascade)
+
+  @@id([dokumenId, penggunaId])
+}
+
+model LaporanLink {
+  id        String        @id @default(cuid())
+  dokumenId String
+  dokumen   Dokumen       @relation(fields: [dokumenId], references: [id], onDelete: Cascade)
+  pelaporId String? // null = dilaporkan sistem
+  pelapor   Pengguna?     @relation(fields: [pelaporId], references: [id])
+  status    StatusLaporan @default(BARU)
+  dibuat    DateTime      @default(now())
+  selesai   DateTime?
+
+  @@index([dokumenId, pelaporId, status])
+}
+
+model LogAktivitas {
+  // hanya INSERT. Jangan ada update/delete.
+  id        String    @id @default(cuid())
+  waktu     DateTime  @default(now())
+  pelakuId  String?
+  pelaku    Pengguna? @relation(fields: [pelakuId], references: [id])
+  aksi      String
+  dokumenId String?
+  rincian   String?
+
+  @@index([dokumenId])
+}
+
+model Pengaturan {
+  kunci String @id
+  nilai String
+}

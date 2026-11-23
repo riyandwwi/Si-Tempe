@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/harian",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/mingguan",
+      "schedule": "0 2 * * 0"
+    }
+  ]
+}

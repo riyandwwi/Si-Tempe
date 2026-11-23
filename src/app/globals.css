@@ -1,0 +1,47 @@
+:root {
+  --bg: #f4f6f3;
+  --surface: #ffffff;
+  --surface-muted: #fbfcfb;
+  --text: #14221b;
+  --text-muted: #55645b;
+  --text-body: #27352d;
+  --border: #dde3de;
+  --border-strong: #9fb0a5;
+  --border-subtle: #e6ebe7;
+  --primary: #0e6b4d;
+  --primary-hover: #094a35;
+  --primary-soft: #e3f1eb;
+  --badge-pub-bg: #ddf1e5;
+  --badge-pub-fg: #0b5133;
+  --badge-dosen-bg: #e8eef9;
+  --badge-dosen-fg: #1b3d7a;
+  --badge-tendik-bg: #f3e8d6;
+  --badge-tendik-fg: #5a3a00;
+  --badge-warn-bg: #ffefcc;
+  --badge-warn-fg: #6e4300;
+  --badge-err-bg: #fce9e6;
+  --badge-err-fg: #7a1a10;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100%;
+}
+
+a {
+  color: var(--primary);
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
