@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sitempe_secret_123}
+      POSTGRES_DB: pusat_dokumen
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pusat_dokumen"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-sitempe_secret_123}@db:5432/pusat_dokumen?schema=public
+      AUTH_SECRET: ${AUTH_SECRET:-ganti-dengan-random-secret-minimal-32-karakter}
+      AUTH_TRUST_HOST: "true"
+      CRON_SECRET: ${CRON_SECRET:-ganti-dengan-cron-secret}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-Pusat Dokumen ITBMP <noreply@itbmp.ac.id>}
+
+volumes:
+  pgdata:

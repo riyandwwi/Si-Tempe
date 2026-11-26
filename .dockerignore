@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.env
+.env.*
+!.env.example
+coverage
+*.exe
+*.log
+SPEC-pusat-dokumen.md
+pusat-dokumen-mockup.html
